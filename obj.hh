@@ -30,4 +30,3 @@ void objWriteCell(Cell *cell, const char *name);
 Cell *objCloneCell(Cell *cell);
 
 #endif /* #ifndef objINCLUDED */
-

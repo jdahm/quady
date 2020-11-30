@@ -25,13 +25,11 @@ class Cell;
  * Edges  the edges in the orbit of the face;
  *        all are nonnull
  */
-class Face
-{
+class Face {
 
   /* -- public class methods ----------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return a new face no adjacent edges.
    * cell -> the cell that the face belongs to;
@@ -57,8 +55,7 @@ class Face
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return the cell for this face.
    * <- the cell that the face belongs to;
@@ -93,18 +90,17 @@ class Face
    *         must be nonnull
    */
   void addEdge(Edge *edge);
-    
+
   /*
    * Remove a given adjacent from this face.
    * edge -> an edge that is no longer adjacent to this face;
    *         must be nonnull
    */
   void removeEdge(Edge *edge);
-    
+
   /* -- protected instance methods ----------------------------------------- */
 
-  protected:
-
+protected:
   /*
    * Initialize this face with no adjacent edges.
    * cell -> the cell that this face belongs to;
@@ -119,8 +115,7 @@ class Face
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The cell that this face belongs to.
    * Nonnull.
@@ -138,25 +133,15 @@ class Face
    * Null if degenerate.
    */
   Edge *edge;
-
 };
 
 /* -- inline instance methods ---------------------------------------------- */
 
-inline Cell *Face::getCell()
-{
-  return cell;
-}
+inline Cell *Face::getCell() { return cell; }
 
-inline unsigned int Face::getID()
-{
-  return id;
-}
+inline unsigned int Face::getID() { return id; }
 
-inline Edge *Face::getEdge()
-{
-  return edge;
-}
+inline Edge *Face::getEdge() { return edge; }
 
 /* ----------------------------------------------------------------------------
  * FaceEdgeIterator
@@ -165,46 +150,40 @@ inline Edge *Face::getEdge()
 /*
  * Enumerates the bounding edges of a given face in counterclockwise order.
  */
-class FaceEdgeIterator
-{
+class FaceEdgeIterator {
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Initialize this edge iterator over a given face.
    * face -> the face to iterate the edges of;
    *         must be nonnull
    */
-  FaceEdgeIterator(Face *face)
-  {
+  FaceEdgeIterator(Face *face) {
     // pick an arbitrary edge in the face orbit
 
     start = face->getEdge();
-    edge  = start;
+    edge = start;
   }
 
   /*
    * Release the storage occupied by this edge iterator.
    */
-  ~FaceEdgeIterator()
-  {
-  }
+  ~FaceEdgeIterator() {}
 
   /*
    * Return the next edge of this edge iterator, if any.
    * <- the next edge of this edge iterator;
    *    null if none
    */
-  Edge *next()
-  {
+  Edge *next() {
     // check for degeneracy or exhausted iteration
 
     Edge *current = edge;
 
-    if (current==0)
-	return 0;
+    if (current == 0)
+      return 0;
 
     // get the next edge in the left orbit of the face, but return the current
     // edge
@@ -212,15 +191,14 @@ class FaceEdgeIterator
 
     Edge *next = current->Lnext();
 
-    edge = next!=start ? next : 0;
+    edge = next != start ? next : 0;
 
     return current;
   }
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The first edge to be iterated.
    * Nonnull.
@@ -232,8 +210,6 @@ class FaceEdgeIterator
    * Null if exhausted.
    */
   Edge *edge;
-
 };
 
 #endif /* #ifndef faceINCLUDED */
-

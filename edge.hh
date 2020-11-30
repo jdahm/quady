@@ -31,13 +31,11 @@ class Vertex;
  * Right  the right face of the edge;
  *        null if currently unknown
  */
-class Edge
-{
+class Edge {
 
   /* -- public class methods ----------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return a new, unconnected edge.
    * <- the new edge;
@@ -77,8 +75,7 @@ class Edge
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return the ID of this edge.
    * <- the ID of this edge;
@@ -196,40 +193,39 @@ class Edge
    * <- the previous edge to the destination;
    *    will be nonnull
    */
-  Edge* Dprev();
+  Edge *Dprev();
 
   /*
    * Return the ccw edge around the left face following this edge.
    * <- the next left face edge;
    *    will be nonnull
    */
-  Edge* Lnext();
+  Edge *Lnext();
 
   /*
    * Return the ccw edge around the left face before this edge.
    * <- the previous left face edge;
    *    will be nonnull
    */
-  Edge* Lprev();
+  Edge *Lprev();
 
   /*
    * Return the edge around the right face ccw following this edge.
    * <- the next right face edge;
    *    will be nonnull
    */
-  Edge* Rnext();
+  Edge *Rnext();
 
   /*
    * Return the edge around the right face ccw before this edge.
    * <- the previous right face edge;
    *    will be nonnull
    */
-  Edge* Rprev();
+  Edge *Rprev();
 
   /* -- protected instance methods ----------------------------------------- */
 
-  protected:
-
+protected:
   /*
    * Initialize this edge with no connections.
    */
@@ -242,8 +238,7 @@ class Edge
 
   /* -- private class variables -------------------------------------------- */
 
-  private:
-
+private:
   /*
    * The next unused edge ID number.
    * Positive.
@@ -252,8 +247,7 @@ class Edge
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The index of this edge in its quad-edge structure.
    * Between 0 and 3 inclusive.
@@ -287,89 +281,40 @@ class Edge
   /* -- friend classes ----------------------------------------------------- */
 
   friend class QuadEdge;
-
 };
 
 /* -- inline instance methods ---------------------------------------------- */
 
-inline unsigned int Edge::getID()
-{
-  return id;
-}
+inline unsigned int Edge::getID() { return id; }
 
-inline Edge* Edge::Rot()
-{
-  return index<3 ? this+1 : this-3;
-}
+inline Edge *Edge::Rot() { return index < 3 ? this + 1 : this - 3; }
 
-inline Edge* Edge::InvRot()
-{
-  return index>0 ? this-1 : this+3;
-}
+inline Edge *Edge::InvRot() { return index > 0 ? this - 1 : this + 3; }
 
-inline Edge* Edge::Sym()
-{
-  return index<2 ? this+2 : this-2;
-}
+inline Edge *Edge::Sym() { return index < 2 ? this + 2 : this - 2; }
 
-inline Edge* Edge::Onext()
-{
-  return next;
-}
+inline Edge *Edge::Onext() { return next; }
 
-inline Edge* Edge::Oprev()
-{
-  return Rot()->Onext()->Rot();
-}
+inline Edge *Edge::Oprev() { return Rot()->Onext()->Rot(); }
 
-inline Edge* Edge::Dnext()
-{
-  return Sym()->Onext()->Sym();
-}
+inline Edge *Edge::Dnext() { return Sym()->Onext()->Sym(); }
 
-inline Edge* Edge::Dprev()
-{
-  return InvRot()->Onext()->InvRot();
-}
+inline Edge *Edge::Dprev() { return InvRot()->Onext()->InvRot(); }
 
-inline Edge* Edge::Lnext()
-{
-  return InvRot()->Onext()->Rot();
-}
+inline Edge *Edge::Lnext() { return InvRot()->Onext()->Rot(); }
 
-inline Edge* Edge::Lprev()
-{
-  return Onext()->Sym();
-}
+inline Edge *Edge::Lprev() { return Onext()->Sym(); }
 
-inline Edge* Edge::Rnext()
-{
-  return Rot()->Onext()->InvRot();
-}
+inline Edge *Edge::Rnext() { return Rot()->Onext()->InvRot(); }
 
-inline Edge* Edge::Rprev()
-{
-  return Sym()->Onext();
-}
+inline Edge *Edge::Rprev() { return Sym()->Onext(); }
 
-inline Vertex* Edge::Org()
-{
-  return vertex;
-}
+inline Vertex *Edge::Org() { return vertex; }
 
-inline Vertex* Edge::Dest()
-{
-  return Sym()->vertex;
-}
+inline Vertex *Edge::Dest() { return Sym()->vertex; }
 
-inline Face* Edge::Left()
-{
-  return Rot()->face;
-}
+inline Face *Edge::Left() { return Rot()->face; }
 
-inline Face* Edge::Right()
-{
-  return InvRot()->face;
-}
+inline Face *Edge::Right() { return InvRot()->face; }
 
 #endif /* #ifndef edgeINCLUDED */

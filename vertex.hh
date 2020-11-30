@@ -28,13 +28,11 @@ class Cell;
  * Edges  the edges in the orbit of the vertex;
  *        all are nonnull
  */
-class Vertex
-{
+class Vertex {
 
   /* -- public class methods ----------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return a new vertex at the origin with no outgoing edges.
    * cell -> the cell that the vertex belongs to;
@@ -65,8 +63,7 @@ class Vertex
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return the cell for this vertex.
    * <- the cell that the vertex belongs to;
@@ -111,8 +108,7 @@ class Vertex
 
   /* -- protected instance methods ----------------------------------------- */
 
-  protected:
-
+protected:
   /*
    * Initialize this vertex at the origin with no outgoing edges.
    * cell -> the cell that this vertex belongs to;
@@ -127,8 +123,7 @@ class Vertex
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The cell that this vertex belongs to.
    * Nonnull.
@@ -146,25 +141,15 @@ class Vertex
    * Null if isolated.
    */
   Edge *edge;
-
 };
 
 /* -- inline instance methods ---------------------------------------------- */
 
-inline Cell *Vertex::getCell()
-{
-  return cell;
-}
+inline Cell *Vertex::getCell() { return cell; }
 
-inline unsigned int Vertex::getID()
-{
-  return id;
-}
+inline unsigned int Vertex::getID() { return id; }
 
-inline Edge *Vertex::getEdge()
-{
-  return edge;
-}
+inline Edge *Vertex::getEdge() { return edge; }
 
 /* ----------------------------------------------------------------------------
  * VertexEdgeIterator
@@ -173,46 +158,40 @@ inline Edge *Vertex::getEdge()
 /*
  * Enumerates the outgoing edges of a given vertex in counterclockwise order.
  */
-class VertexEdgeIterator
-{
+class VertexEdgeIterator {
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Initialize this edge iterator over a given vertex.
    * vertex -> the vertex to iterate the edges of;
    *           must be nonnull
    */
-  VertexEdgeIterator(Vertex *vertex)
-  {
+  VertexEdgeIterator(Vertex *vertex) {
     // pick an arbitrary edge in the vertex orbit
 
     start = vertex->getEdge();
-    edge  = start;
+    edge = start;
   }
 
   /*
    * Release the storage occupied by this edge iterator.
    */
-  ~VertexEdgeIterator()
-  {
-  }
+  ~VertexEdgeIterator() {}
 
   /*
    * Return the next edge of this edge iterator, if any.
    * <- the next edge of this edge iterator;
    *    null if none
    */
-  Edge *next()
-  {
+  Edge *next() {
     // check for degeneracy or exhausted iteration
 
     Edge *current = edge;
 
-    if (current==0)
-	return 0;
+    if (current == 0)
+      return 0;
 
     // get the next edge in the counterclockwise orbit of the vertex, but
     // return the current edge
@@ -220,15 +199,14 @@ class VertexEdgeIterator
 
     Edge *next = current->Onext();
 
-    edge = next!=start ? next : 0;
+    edge = next != start ? next : 0;
 
     return current;
   }
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The first edge to be iterated.
    * Nonnull.
@@ -240,7 +218,6 @@ class VertexEdgeIterator
    * Null if exhausted.
    */
   Edge *edge;
-
 };
 
 #endif /* #ifndef vertexINCLUDED */

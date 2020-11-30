@@ -10,44 +10,41 @@
 // (this shows two different ways to print list)
 
 #include <assert.h>
-#include <stdio.h>
 #include <iostream.h>
+#include <stdio.h>
 
-class Num {		// dumb little class
-    int val;
-  public:
-    Num()
-	{}
-    ~Num()
-	{val = -5;}
-    void init(int x)
-	{val = x;}
-    int value() const
-	{return val;}
+class Num { // dumb little class
+  int val;
+
+public:
+  Num() {}
+  ~Num() { val = -5; }
+  void init(int x) { val = x; }
+  int value() const { return val; }
 };
 
 // useful shorthand:
-typedef Array<Num> Num_array;		// an array of Nums
+typedef Array<Num> Num_array; // an array of Nums
 
-ostream &operator<<(ostream &s, const Num &n)	// print Num
-    {return s << n.value();}
+ostream &operator<<(ostream &s, const Num &n) // print Num
+{
+  return s << n.value();
+}
 
 void simple_test() {
-    Num_array a;
-    int i;
-    for (i=16; i>=0; i--)
-	a[i].init(10*i);
+  Num_array a;
+  int i;
+  for (i = 16; i >= 0; i--)
+    a[i].init(10 * i);
 
-    // print list with stdio
-    for (i=0; i<a.num(); i++)
-	printf(" %d", a[i].value());
-    printf("\n");
+  // print list with stdio
+  for (i = 0; i < a.num(); i++)
+    printf(" %d", a[i].value());
+  printf("\n");
 
-    // print list with iostream
-    cout << "this is my " << a;
+  // print list with iostream
+  cout << "this is my " << a;
 }
-void main() {
-    simple_test();
-}
+void main() { simple_test(); }
 
 #endif

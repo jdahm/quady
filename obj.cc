@@ -6,7 +6,6 @@
 //
 // Paul Heckbert	10 Feb 1999
 
-
 // Most of the code in this file is only relevant
 // if you need to modify objReadCell
 
@@ -15,53 +14,55 @@
 // please let me know.
 
 #include <cstdlib>
-#include <string>	// for strcmp
-#include <fstream>	// for file I/O
-#include <iomanip>	// for file input
+#include <fstream> // for file I/O
+#include <iomanip> // for file input
+#include <string>  // for strcmp
 
 #include <cassert>
 #include <stdio.h>
 
-#include "list.hh"
 #include "array.hh"
 #include "cell.hh"
+#include "list.hh"
 
 // ---------------------------- some data structures used by objReadCell only
 
 struct Tvert;
 
-typedef List<Tvert> Vlist;	// linked list of pointers to vertices
+typedef List<Tvert> Vlist; // linked list of pointers to vertices
 
-struct Tface {			// a (temporary) face
-    Vlist vlist;		// the vertices of this face, in ccw order
-    int   no;                   // face number
-    Face *face;                 // final face in cell, null if not inst. yet
-    // need anything else in here??
+struct Tface { // a (temporary) face
+  Vlist vlist; // the vertices of this face, in ccw order
+  int no;      // face number
+  Face *face;  // final face in cell, null if not inst. yet
+               // need anything else in here??
 };
 
-std::ostream &operator<<(std::ostream &s, const Tface &f)	// print a Tface
-    { return s << 'f' << f.no << " with vertices " << f.vlist; }
+std::ostream &operator<<(std::ostream &s, const Tface &f) // print a Tface
+{
+  return s << 'f' << f.no << " with vertices " << f.vlist;
+}
 
 class Tsector {
 public:
+  Tvert *p; // first ccw vertex
+  Tface *f; // intervening face
+  Tvert *q; // second ccw vertex
 
-  Tvert *p;     // first ccw vertex
-  Tface *f;     // intervening face
-  Tvert *q;     // second ccw vertex
-
-  Tsector(Tvert *p, Tface *f, Tvert *q)
-    { this->p = p; this->f = f, this->q = q; }
-
+  Tsector(Tvert *p, Tface *f, Tvert *q) {
+    this->p = p;
+    this->f = f, this->q = q;
+  }
 };
 
-typedef List<Tsector> Arc;	// arc of consec. edges emanating from a vertex
-				// in counterclockwise order
-				// (a linked list of pointers to other vertex)
+typedef List<Tsector> Arc; // arc of consec. edges emanating from a vertex
+                           // in counterclockwise order
+                           // (a linked list of pointers to other vertex)
 
-typedef List<Arc> Arclist;	// unordered collection of arcs about a vertex
-				// (a linked list of pointers to Arcs)
-				// when done, this (linear) list contains
-				// the ccw cycle of edges about a vertex
+typedef List<Arc> Arclist; // unordered collection of arcs about a vertex
+                           // (a linked list of pointers to Arcs)
+                           // when done, this (linear) list contains
+                           // the ccw cycle of edges about a vertex
 
 // For example, for vertex v below,
 //
@@ -83,80 +84,88 @@ typedef List<Arc> Arclist;	// unordered collection of arcs about a vertex
 // When done, the Arclist for this vertex would be a single Arc.
 // It would be a cyclic permutation of (a,b,c,d,e,f).
 
-struct Tvert {			// a (temporary) vertex
-    int no;			// ??for debugging
-    int done;			// is topology fully set & arclist complete?
-    std::array<double, 3> p;			// position
-    Arclist arclist;		// info about the vertices adjacent to this one
-    Vertex *vertex;             // final vertex in cell, null if not id. yet
-    int instantiated;           // true if identified and instantiated
+struct Tvert {             // a (temporary) vertex
+  int no;                  // ??for debugging
+  int done;                // is topology fully set & arclist complete?
+  std::array<double, 3> p; // position
+  Arclist arclist;         // info about the vertices adjacent to this one
+  Vertex *vertex;          // final vertex in cell, null if not id. yet
+  int instantiated;        // true if identified and instantiated
 };
 
-std::ostream &operator<<(std::ostream &s, const Tvert &t)	// print a Tvert
-    { return s << t.no; }
+std::ostream &operator<<(std::ostream &s, const Tvert &t) // print a Tvert
+{
+  return s << t.no;
+}
 
-std::ostream &operator<<(std::ostream &s, const Tsector &sector)	// print a Tsector
-    { return s << sector.p->no << "-" << sector.q->no; }
+std::ostream &operator<<(std::ostream &s,
+                         const Tsector &sector) // print a Tsector
+{
+  return s << sector.p->no << "-" << sector.q->no;
+}
 
 // ---------------------------- obj file input
 
 static void merge_arc(Tvert *v, Tvert *p, Tvert *q, Tface *f) {
-    // Merge the arc (p,q) into the list of arcs around vertex v.
-    // Cases:
-    //  1. ( bef &&  aft) it connects two existing arcs
-    //  2. ( bef && !aft) it goes on the end of an existing arc
-    //  3. (!bef &&  aft) it goes on the beginning of an existing arc
-    //  4. (!bef && !aft) it does not connect with an existing arc
-    // std::cout << "merge_arc " << *v << " " << *p << " " << *q << std::endl;
-    // std::cout << "before, arclist=" << v->arclist;
-    List_item<Arc> *a, *aft_item;
-    Arc *bef = 0, *aft = 0;
-    Tsector *sector = new Tsector(p, f, q);
-    for (a=v->arclist.first(); a; a=a->next()) {
-	// a->obj is an Arc
-	if (a->obj->last()->obj->q==p) bef = a->obj;
-	if (a->obj->first()->obj->p==q) {aft = a->obj; aft_item = a;}
+  // Merge the arc (p,q) into the list of arcs around vertex v.
+  // Cases:
+  //  1. ( bef &&  aft) it connects two existing arcs
+  //  2. ( bef && !aft) it goes on the end of an existing arc
+  //  3. (!bef &&  aft) it goes on the beginning of an existing arc
+  //  4. (!bef && !aft) it does not connect with an existing arc
+  // std::cout << "merge_arc " << *v << " " << *p << " " << *q << std::endl;
+  // std::cout << "before, arclist=" << v->arclist;
+  List_item<Arc> *a, *aft_item;
+  Arc *bef = 0, *aft = 0;
+  Tsector *sector = new Tsector(p, f, q);
+  for (a = v->arclist.first(); a; a = a->next()) {
+    // a->obj is an Arc
+    if (a->obj->last()->obj->q == p)
+      bef = a->obj;
+    if (a->obj->first()->obj->p == q) {
+      aft = a->obj;
+      aft_item = a;
     }
-    // std::cout << "  bef=" << *bef << "  aft=" << *aft;
-    // now concatenate the three arcs bef, (p,q), and aft
-    // where bef and aft might be null
-    if (bef) {
-	if (aft) {	// 1. ( bef &&  aft) it connects two existing arcs
-	    bef->append(sector);		// insert new sector
-	    if (bef==aft) {
-		// done with vertex! connecting these would make arc circular
-		// std::cout << v->arclist << " done" << std::endl;
-		v->done = 1;
-		return;
-	    }
-	    // now we'll merge two arcs in the arclist
-	    v->arclist.remove(aft_item);	// remove following arc
-	    bef->concat(aft);			// and concat it into previous
-	}
-	else		// 2. ( bef && !aft) it goes on the end of existing arc
-	    bef->append(sector);
+  }
+  // std::cout << "  bef=" << *bef << "  aft=" << *aft;
+  // now concatenate the three arcs bef, (p,q), and aft
+  // where bef and aft might be null
+  if (bef) {
+    if (aft) {             // 1. ( bef &&  aft) it connects two existing arcs
+      bef->append(sector); // insert new sector
+      if (bef == aft) {
+        // done with vertex! connecting these would make arc circular
+        // std::cout << v->arclist << " done" << std::endl;
+        v->done = 1;
+        return;
+      }
+      // now we'll merge two arcs in the arclist
+      v->arclist.remove(aft_item); // remove following arc
+      bef->concat(aft);            // and concat it into previous
+    } else // 2. ( bef && !aft) it goes on the end of existing arc
+      bef->append(sector);
+  } else {
+    if (aft) // 3. (!bef &&  aft) it goes on beg. of existing arc
+      aft->prepend(sector);
+    else { // 4. (!bef && !aft) it doesn't connect w. existing arc
+      Arc *arc = new Arc;
+      assert(arc);
+      arc->append(sector);
+      v->arclist.append(arc);
     }
-    else {
-	if (aft)	// 3. (!bef &&  aft) it goes on beg. of existing arc
-	    aft->prepend(sector);
-	else {		// 4. (!bef && !aft) it doesn't connect w. existing arc
-	    Arc *arc = new Arc;
-	    assert(arc);
-	    arc->append(sector);
-	    v->arclist.append(arc);
-	}
-    }
-    // std::cout << "after, arclist=" << v->arclist;
+  }
+  // std::cout << "after, arclist=" << v->arclist;
 }
 
 static void add_arcs(Vlist &vlist, Tface *f) {
-    // std::cout << "add_arcs " << vlist;
-    // vlist is not a circular list, but we need to step through all
-    // consecutive triples as if it were circular
-    List_item<Tvert> *u, *v, *w;
-    for (u=vlist.last(), v=vlist.first(), w=v->next(); w; u=v, v=w, w=w->next())
-	merge_arc(v->obj, w->obj, u->obj, f);
-    merge_arc(v->obj, vlist.first()->obj, u->obj, f);  // one more that we missed
+  // std::cout << "add_arcs " << vlist;
+  // vlist is not a circular list, but we need to step through all
+  // consecutive triples as if it were circular
+  List_item<Tvert> *u, *v, *w;
+  for (u = vlist.last(), v = vlist.first(), w = v->next(); w;
+       u = v, v = w, w = w->next())
+    merge_arc(v->obj, w->obj, u->obj, f);
+  merge_arc(v->obj, vlist.first()->obj, u->obj, f); // one more that we missed
 }
 
 /*
@@ -177,11 +186,10 @@ static void add_arcs(Vlist &vlist, Tface *f) {
  * <- true if there is an edge from _vertex1_ to _vertex2_ with left face
  *    _left_
  */
-static int isConnected(Vertex *vertex1, Vertex *vertex2, Face *left)
-{
-  assert(vertex1!=0);
-  assert(vertex2!=0);
-  assert(left!=0);
+static int isConnected(Vertex *vertex1, Vertex *vertex2, Face *left) {
+  assert(vertex1 != 0);
+  assert(vertex2 != 0);
+  assert(left != 0);
 
   // check the orbit of vertex1 for an edge to vertex2
 
@@ -189,8 +197,8 @@ static int isConnected(Vertex *vertex1, Vertex *vertex2, Face *left)
 
   Edge *edge;
 
-  while ((edge = edges.next())!=0)
-    if (edge->Dest()==vertex2 && edge->Left()==left)
+  while ((edge = edges.next()) != 0)
+    if (edge->Dest() == vertex2 && edge->Left() == left)
       return 1;
 
   return 0;
@@ -205,24 +213,21 @@ static int isConnected(Vertex *vertex1, Vertex *vertex2, Face *left)
  * <- the face to the right of _left_ around _vertex_;
  *    null if none
  */
-static Face *RightFace(Vertex *vertex, Face *left)
-{
-  assert(vertex!=0);
-  assert(left!=0);
+static Face *RightFace(Vertex *vertex, Face *left) {
+  assert(vertex != 0);
+  assert(left != 0);
 
   // check the left face of each edge in the orbit of the vertex
 
   Edge *start = vertex->getEdge();
-  Edge *scan  = start;
+  Edge *scan = start;
 
-  do
-  {
-    if (scan->Left()==left)
+  do {
+    if (scan->Left() == left)
       return scan->Right();
 
     scan = scan->Onext();
-  }
-  while (scan!=start);
+  } while (scan != start);
 
   return 0;
 }
@@ -235,10 +240,9 @@ static Face *RightFace(Vertex *vertex, Face *left)
  *           must be nonnull
  * <- true if _vertex_ is on _face_
  */
-static int hasVertex(Face *face, Vertex *vertex)
-{
-  assert(face!=0);
-  assert(vertex!=0);
+static int hasVertex(Face *face, Vertex *vertex) {
+  assert(face != 0);
+  assert(vertex != 0);
 
   // check the origin vertex of each edge on the face
 
@@ -246,8 +250,8 @@ static int hasVertex(Face *face, Vertex *vertex)
 
   Edge *edge;
 
-  while ((edge = edges.next())!=0)
-    if (edge->Org()==vertex)
+  while ((edge = edges.next()) != 0)
+    if (edge->Org() == vertex)
       return 1;
 
   return 0;
@@ -262,18 +266,16 @@ static int hasVertex(Face *face, Vertex *vertex)
  *          must be nonnull
  * <- true if _face_ is adjacent to all the vertices on _vlist_
  */
-static int hasVertices(Face *face, Vlist *vlist)
-{
-  assert(face!=0);
-  assert(vlist!=0);
+static int hasVertices(Face *face, Vlist *vlist) {
+  assert(face != 0);
+  assert(vlist != 0);
 
   // check each vertex on the list
 
-  for (List_item<Tvert> *vi = vlist->first(); vi!=0; vi = vi->next())
-  {
+  for (List_item<Tvert> *vi = vlist->first(); vi != 0; vi = vi->next()) {
     Vertex *vertex = vi->obj->vertex;
 
-    if (vertex!=0 && !hasVertex(face, vertex))
+    if (vertex != 0 && !hasVertex(face, vertex))
       return 0;
   }
 
@@ -289,14 +291,13 @@ static int hasVertices(Face *face, Vlist *vlist)
  * <- a face that can be used to instantiate _f_;
  *    null if none are available
  */
-static Face *getFace(Cell *cell, Tface *f)
-{
-  assert(cell!=0);
-  assert(f!=0);
+static Face *getFace(Cell *cell, Tface *f) {
+  assert(cell != 0);
+  assert(f != 0);
 
   // locate all the unused faces in the cell
 
-  Face       **faces = new Face*[cell->countFaces()];
+  Face **faces = new Face *[cell->countFaces()];
   unsigned int count = 0;
 
   {
@@ -304,9 +305,9 @@ static Face *getFace(Cell *cell, Tface *f)
 
     Face *face;
 
-    while ((face = iterator.next())!=0)
-      if (face->data==0)
-	faces[count++] = face;
+    while ((face = iterator.next()) != 0)
+      if (face->data == 0)
+        faces[count++] = face;
   }
 
   // discard any faces that don't include all the identified vertices of the
@@ -315,18 +316,17 @@ static Face *getFace(Cell *cell, Tface *f)
   {
     unsigned int i = 0;
 
-    while (i<count)
-    {
+    while (i < count) {
       Face *face = faces[i];
 
       if (hasVertices(face, &f->vlist))
-	i++;
+        i++;
       else
-	faces[i] = faces[--count];
+        faces[i] = faces[--count];
     }
   }
 
-  Face *face = count>0 ? faces[0] : 0;
+  Face *face = count > 0 ? faces[0] : 0;
 
   delete[] faces;
 
@@ -340,48 +340,44 @@ static Face *getFace(Cell *cell, Tface *f)
  * f    -> the Tface to instantiate;
  *         must be nonnull
  */
-static void makeFace(Cell *cell, Tface *f)
-{
-  assert(cell!=0);
-  assert(f!=0);
+static void makeFace(Cell *cell, Tface *f) {
+  assert(cell != 0);
+  assert(f != 0);
 
   // get the face to use for the Tface
 
   Face *face = getFace(cell, f);
 
-  assert(face!=0);
+  assert(face != 0);
 
   // connect all pairs of identified vertices on the face, as necessary
 
   {
-    for (List_item<Tvert> *vi = f->vlist.first(); vi!=0; vi = vi->next())
-    {
+    for (List_item<Tvert> *vi = f->vlist.first(); vi != 0; vi = vi->next()) {
       Vertex *vertex1 = vi->obj->vertex;
       Vertex *vertex2;
 
-      if (vertex1!=0)
-      {
-	// find the next identified vertex, even if just itself
+      if (vertex1 != 0) {
+        // find the next identified vertex, even if just itself
 
-	List_item<Tvert> *vj = vi;
+        List_item<Tvert> *vj = vi;
 
-	for (;;)
-	{
-	  vj = vj->next();
+        for (;;) {
+          vj = vj->next();
 
-	  if (vj==0)
-	    vj = f->vlist.first();
+          if (vj == 0)
+            vj = f->vlist.first();
 
-	  vertex2 = vj->obj->vertex;
+          vertex2 = vj->obj->vertex;
 
-	  if (vertex2!=0)
-	    break;
-	}
+          if (vertex2 != 0)
+            break;
+        }
 
-	// connect the vertices, if necessary
+        // connect the vertices, if necessary
 
-	if (!isConnected(vertex1, vertex2, face))
-	  (void)cell->makeFaceEdge(face, vertex1, vertex2)->Right();
+        if (!isConnected(vertex1, vertex2, face))
+          (void)cell->makeFaceEdge(face, vertex1, vertex2)->Right();
       }
     }
   }
@@ -390,33 +386,31 @@ static void makeFace(Cell *cell, Tface *f)
 
   List_item<Tvert> *vi0 = f->vlist.first();
 
-  while (vi0->obj->vertex==0)
+  while (vi0->obj->vertex == 0)
     vi0 = vi0->next();
 
   // identify all the following and preceding vertices
 
-  List_item<Tvert> *vi     = vi0;
-  Vertex           *vertex = vi0->obj->vertex;
+  List_item<Tvert> *vi = vi0;
+  Vertex *vertex = vi0->obj->vertex;
 
-  for (;;)
-  {
+  for (;;) {
     vi = vi->next();
 
-    if (vi==0)
+    if (vi == 0)
       vi = f->vlist.first();
 
-    if (vi==vi0)
+    if (vi == vi0)
       break;
 
     Tvert *v = vi->obj;
 
-    if (v->vertex==0)
-    {
+    if (v->vertex == 0) {
       Face *right = RightFace(vertex, face);
 
-      assert(right!=0);
+      assert(right != 0);
 
-      v->vertex      = cell->makeVertexEdge(vertex, face, right)->Dest();
+      v->vertex = cell->makeVertexEdge(vertex, face, right)->Dest();
       v->vertex->pos = v->p;
 
       v->vertex->setID(v->no);
@@ -441,35 +435,32 @@ static void makeFace(Cell *cell, Tface *f)
  * v    -> the Tvert to instantiate;
  *         must be nonnull
  */
-static void makeVertex(Cell *cell, Tvert *v)
-{
-  assert(cell!=0);
-  assert(v!=0);
+static void makeVertex(Cell *cell, Tvert *v) {
+  assert(cell != 0);
+  assert(v != 0);
 
   // find the first sector with an identified p vertex
 
   List_item<Tsector> *wi0 = v->arclist.first()->obj->first();
 
-  while (wi0->obj->p->vertex==0)
+  while (wi0->obj->p->vertex == 0)
     wi0 = wi0->next();
 
   // instantiate all following sectors of the vertex in counterclockwise order
 
   List_item<Tsector> *wi = wi0;
 
-  do
-  {
+  do {
     Tface *f = wi->obj->f;
 
-    if (f->face==0)
+    if (f->face == 0)
       makeFace(cell, f);
 
     wi = wi->next();
 
-    if (wi==0)
+    if (wi == 0)
       wi = v->arclist.first()->obj->first();
-  }
-  while (wi!=wi0);
+  } while (wi != wi0);
 
   // the vertex is now instantiated
 
@@ -477,55 +468,55 @@ static void makeVertex(Cell *cell, Tvert *v)
 }
 
 static void print_quadedge(Array<Tvert> verts, List<Tface> faces) {
-    // print vertices around each face and vertex currently
+  // print vertices around each face and vertex currently
 
-    std::cout << "VERTICES OF EACH FACE:" << std::endl;
-    List_item<Tface> *fi;
-    for (fi=faces.first(); fi; fi=fi->next()) {
-	std::cout << "face:";
-	List_item<Tvert> *vi;
-	for (vi=fi->obj->vlist.first(); vi; vi=vi->next())
-	    std::cout << " " << vi->obj->no;
-	std::cout << std::endl;
+  std::cout << "VERTICES OF EACH FACE:" << std::endl;
+  List_item<Tface> *fi;
+  for (fi = faces.first(); fi; fi = fi->next()) {
+    std::cout << "face:";
+    List_item<Tvert> *vi;
+    for (vi = fi->obj->vlist.first(); vi; vi = vi->next())
+      std::cout << " " << vi->obj->no;
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+
+  std::cout << "VERTICES AROUND EACH VERTEX:" << std::endl;
+  int i;
+  for (i = 0; i < verts.num(); i++) {
+    Tvert *v;
+    v = &verts[i];
+    std::cout << "around vertex " << v->no << ":";
+    assert(v->done);
+    assert(v->arclist.length() == 1);
+    // step through the Tverts in the first (and only) arc of arclist
+    List_item<Tsector> *wi;
+    for (wi = v->arclist.first()->obj->first(); wi; wi = wi->next()) {
+      Tsector *sector = wi->obj;
+      std::cout << " " << *sector;
     }
     std::cout << std::endl;
-
-    std::cout << "VERTICES AROUND EACH VERTEX:" << std::endl;
-    int i;
-    for (i=0; i<verts.num(); i++) {
-	Tvert *v;
-	v = &verts[i];
-	std::cout << "around vertex " << v->no << ":";
-	assert(v->done);
-	assert(v->arclist.length()==1);
-	// step through the Tverts in the first (and only) arc of arclist
-	List_item<Tsector> *wi;
-	for (wi=v->arclist.first()->obj->first(); wi; wi=wi->next()) {
-	    Tsector *sector = wi->obj;
-	    std::cout << " " << *sector;
-	}
-	std::cout << std::endl;
-    }
+  }
 }
 
 void check_closed(Array<Tvert> verts) {
-    // check to see if polyhedron is closed (else we'd crash soon anyway)
-    int i;
-    for (i=0; i<verts.num(); i++) {
-	Arclist &al = verts[i].arclist;
-	if (!verts[i].done || al.length()!=1) {
-	    if (al.length()==0)
-		std::cerr << "\nERROR in OBJ file: unused vertex "
-		    << verts[i].no << std::endl;
-	    else if (!verts[i].done)
-		std::cerr << "\nERROR in OBJ file: vertex " << verts[i].no
-		    << " is not surrounded by polygons" << std::endl;
-	    else
-		std::cerr << "\nERROR in OBJ file: repeated face: " <<
-			*al.first()->next()->obj->first()->obj->f << std::endl;
-	    exit(1);
-	}
+  // check to see if polyhedron is closed (else we'd crash soon anyway)
+  int i;
+  for (i = 0; i < verts.num(); i++) {
+    Arclist &al = verts[i].arclist;
+    if (!verts[i].done || al.length() != 1) {
+      if (al.length() == 0)
+        std::cerr << "\nERROR in OBJ file: unused vertex " << verts[i].no
+                  << std::endl;
+      else if (!verts[i].done)
+        std::cerr << "\nERROR in OBJ file: vertex " << verts[i].no
+                  << " is not surrounded by polygons" << std::endl;
+      else
+        std::cerr << "\nERROR in OBJ file: repeated face: "
+                  << *al.first()->next()->obj->first()->obj->f << std::endl;
+      exit(1);
     }
+  }
 }
 
 static Cell *build_quadedge(Array<Tvert> verts, List<Tface> faces) {
@@ -549,7 +540,7 @@ static Cell *build_quadedge(Array<Tvert> verts, List<Tface> faces) {
   {
     Tvert *v = &verts[0];
 
-    v->vertex      = vertex1;
+    v->vertex = vertex1;
     v->vertex->pos = v->p;
 
     v->vertex->setID(v->no);
@@ -559,16 +550,14 @@ static Cell *build_quadedge(Array<Tvert> verts, List<Tface> faces) {
 
   // instantiate identified vertices until all are instantiated
 
-  for (;;)
-  {
+  for (;;) {
     int instantiated = 1;
 
-    for (int i = 0; i<verts.num(); i++)
-    {
+    for (int i = 0; i < verts.num(); i++) {
       Tvert *v = &verts[i];
 
-      if (v->vertex!=0 && !v->instantiated)
-	makeVertex(cell, v);
+      if (v->vertex != 0 && !v->instantiated)
+        makeVertex(cell, v);
 
       instantiated &= v->instantiated;
     }
@@ -584,7 +573,7 @@ static Cell *build_quadedge(Array<Tvert> verts, List<Tface> faces) {
 
     Face *face;
 
-    while ((face = iterator.next())!=0)
+    while ((face = iterator.next()) != 0)
       face->data = 0;
   }
 
@@ -593,107 +582,104 @@ static Cell *build_quadedge(Array<Tvert> verts, List<Tface> faces) {
 
 static Cell *objReadCell(std::istream &s, const char *streamname) {
 
-    // warning: this routine does a lousy job of checking for errors
-    // (e.g. spaces at the end of input lines)
-    // that should be fixed!
+  // warning: this routine does a lousy job of checking for errors
+  // (e.g. spaces at the end of input lines)
+  // that should be fixed!
 
-    char tok[20];
+  char tok[20];
 
-    Array<Tvert> verts;		// all the vertices
-    int nvert = 0;		// current vertex number (counts up)
-    int nface = 0;		// current face number (counts up)
+  Array<Tvert> verts; // all the vertices
+  int nvert = 0;      // current vertex number (counts up)
+  int nface = 0;      // current face number (counts up)
 
-    List<Tface> faces;		// all the faces
+  List<Tface> faces; // all the faces
 
-    while (s >> std::setw(sizeof tok) >> tok) {
-        // std::cout << "(" << tok << ")" << std::endl;
-	if (!std::strcmp(tok, "v")) {		// vertex command
-	    nvert++;
-	    double x, y, z;
-	    s >> x >> y >> z;
-	    // std::cout << "verts[" << nvert << "]=" << Vec3(x, y, z) << std::endl;
-	    verts[nvert-1].p[0] = x;
-	    verts[nvert-1].p[1] = y;
-	    verts[nvert-1].p[2] = z;
-	    verts[nvert-1].no = nvert;
-	    verts[nvert-1].done = 0;
-	    verts[nvert-1].vertex = 0;
-	    verts[nvert-1].instantiated = 0;
-	    // OBJ vertex numbering starts at 1, but we shift them
-	    // all to start at 0 for indexing into vert[]
-	}
-	else if (!strcmp(tok, "f")) {	// face command
-	    nface++;
-	    Tface *f = new Tface;
-	    f->face = 0;
-	    f->no   = nface;
-	    assert(f);
-	    faces.append(f);
-	    int n;
-	    for (n=0; s.peek()!='\n'; n++) {
-		int v;
-		// std::cout << "  peek='" << (char)s.peek() << "' ";
-		s >> v;
-		// std::cout << "  got " << v << std::endl;
-		v--;		// we start numbering at 0, not 1
-		f->vlist.append(&verts[v]);
-	    }
-	    // std::cout << "done gobbling" << std::endl;
-	    // std::cout << "f " << f->vlist;
-	    add_arcs(f->vlist, f);		// add the topological info in face f
-	}
-	else if (!strcmp(tok, "#")) {
-	    // gobble comment
-	    s.ignore(1000, '\n');
-	}
-	else {
-	    std::cerr << "objReadCell: I can't parse this OBJ file, hit token (" << tok
-		<< ")" << std::endl;
-	    exit(1);
-	}
+  while (s >> std::setw(sizeof tok) >> tok) {
+    // std::cout << "(" << tok << ")" << std::endl;
+    if (!std::strcmp(tok, "v")) { // vertex command
+      nvert++;
+      double x, y, z;
+      s >> x >> y >> z;
+      // std::cout << "verts[" << nvert << "]=" << Vec3(x, y, z) << std::endl;
+      verts[nvert - 1].p[0] = x;
+      verts[nvert - 1].p[1] = y;
+      verts[nvert - 1].p[2] = z;
+      verts[nvert - 1].no = nvert;
+      verts[nvert - 1].done = 0;
+      verts[nvert - 1].vertex = 0;
+      verts[nvert - 1].instantiated = 0;
+      // OBJ vertex numbering starts at 1, but we shift them
+      // all to start at 0 for indexing into vert[]
+    } else if (!strcmp(tok, "f")) { // face command
+      nface++;
+      Tface *f = new Tface;
+      f->face = 0;
+      f->no = nface;
+      assert(f);
+      faces.append(f);
+      int n;
+      for (n = 0; s.peek() != '\n'; n++) {
+        int v;
+        // std::cout << "  peek='" << (char)s.peek() << "' ";
+        s >> v;
+        // std::cout << "  got " << v << std::endl;
+        v--; // we start numbering at 0, not 1
+        f->vlist.append(&verts[v]);
+      }
+      // std::cout << "done gobbling" << std::endl;
+      // std::cout << "f " << f->vlist;
+      add_arcs(f->vlist, f); // add the topological info in face f
+    } else if (!strcmp(tok, "#")) {
+      // gobble comment
+      s.ignore(1000, '\n');
+    } else {
+      std::cerr << "objReadCell: I can't parse this OBJ file, hit token ("
+                << tok << ")" << std::endl;
+      exit(1);
     }
-    /*
-    std::cout << "obj file " << streamname << " contained "
-	<< nvert << " vertices, "
-	<< faces.length() << " faces "
-	<< std::endl;
-    */
+  }
+  /*
+  std::cout << "obj file " << streamname << " contained "
+      << nvert << " vertices, "
+      << faces.length() << " faces "
+      << std::endl;
+  */
 
-    // print_quadedge(verts, faces);
+  // print_quadedge(verts, faces);
 
-    return build_quadedge(verts, faces);
+  return build_quadedge(verts, faces);
 }
 
 Cell *objReadCell(const char *file) {
-    std::ifstream s(file, std::ios::in);
-    if (!s) {
-	std::cerr << "objReadCell: can't read " << file << std::endl;
-	return 0;
-    }
-    return objReadCell(s, file);
+  std::ifstream s(file, std::ios::in);
+  if (!s) {
+    std::cerr << "objReadCell: can't read " << file << std::endl;
+    return 0;
+  }
+  return objReadCell(s, file);
 }
 
-#ifdef OBJ_MAIN	// compile with -DOBJ_MAIN to test objReadCell
+#ifdef OBJ_MAIN // compile with -DOBJ_MAIN to test objReadCell
 
 void main(int argc, char **argv) {
-    if (argc!=2) exit(1);
-    objReadCell(argv[1]);
+  if (argc != 2)
+    exit(1);
+  objReadCell(argv[1]);
 }
 
 #endif
 
-static void objWriteCell(Cell *cell, std::ostream &s, const char *streamname)
-{
+static void objWriteCell(Cell *cell, std::ostream &s, const char *streamname) {
   // renumber vertices in current order
   // yuk: should really leave ids intact ???
 
   {
     CellVertexIterator vertices(cell);
 
-    Vertex      *vertex;
+    Vertex *vertex;
     unsigned int id = 1;
 
-    while ((vertex = vertices.next())!=0)
+    while ((vertex = vertices.next()) != 0)
       vertex->setID(id++);
   }
 
@@ -706,10 +692,9 @@ static void objWriteCell(Cell *cell, std::ostream &s, const char *streamname)
 
     Vertex *vertex;
 
-    while ((vertex = vertices.next())!=0)
-      s << "v " << vertex->pos[0] << " "
-	        << vertex->pos[1] << " "
-	        << vertex->pos[2] << "\n";
+    while ((vertex = vertices.next()) != 0)
+      s << "v " << vertex->pos[0] << " " << vertex->pos[1] << " "
+        << vertex->pos[2] << "\n";
   }
 
   // write faces in any order
@@ -721,52 +706,49 @@ static void objWriteCell(Cell *cell, std::ostream &s, const char *streamname)
 
     Face *face;
 
-    while ((face = faces.next())!=0)
-    {
+    while ((face = faces.next()) != 0) {
       s << "f";
 
       FaceEdgeIterator edges(face);
 
       Edge *edge;
 
-      while ((edge = edges.next())!=0)
-	s << " " << edge->Org()->getID();
+      while ((edge = edges.next()) != 0)
+        s << " " << edge->Org()->getID();
 
       s << "\n";
     }
   }
 }
 
-void objWriteCell(Cell *cell, const char *file)
-{
-    std::ofstream s(file, std::ios::out);
-    if (!s) {
-	std::cerr << "objWriteCell: can't write " << file << std::endl;
-	return;
-    }
-    objWriteCell(cell, s, file);
+void objWriteCell(Cell *cell, const char *file) {
+  std::ofstream s(file, std::ios::out);
+  if (!s) {
+    std::cerr << "objWriteCell: can't write " << file << std::endl;
+    return;
+  }
+  objWriteCell(cell, s, file);
 }
 
-Cell *objCloneCell(Cell *cell)
-{
+Cell *objCloneCell(Cell *cell) {
   // renumber vertices in current order
   // yuk: should really leave ids intact ???
 
   {
     CellVertexIterator vertices(cell);
 
-    Vertex      *vertex;
+    Vertex *vertex;
     unsigned int id = 1;
 
-    while ((vertex = vertices.next())!=0)
+    while ((vertex = vertices.next()) != 0)
       vertex->setID(id++);
   }
 
-  Array<Tvert> verts;		// all the vertices
-  int nvert = 0;		// current vertex number (counts up)
+  Array<Tvert> verts; // all the vertices
+  int nvert = 0;      // current vertex number (counts up)
 
-  List<Tface> faces;		// all the faces
-  int nface = 0;		// current face number (counts up)
+  List<Tface> faces; // all the faces
+  int nface = 0;     // current face number (counts up)
 
   // make the Tverts
 
@@ -775,14 +757,13 @@ Cell *objCloneCell(Cell *cell)
 
     Vertex *vertex;
 
-    while ((vertex = vertices.next())!=0)
-    {
+    while ((vertex = vertices.next()) != 0) {
       nvert++;
-      verts[nvert-1].p = vertex->pos;
-      verts[nvert-1].no = nvert;
-      verts[nvert-1].done = 0;
-      verts[nvert-1].vertex = 0;
-      verts[nvert-1].instantiated = 0;
+      verts[nvert - 1].p = vertex->pos;
+      verts[nvert - 1].no = nvert;
+      verts[nvert - 1].done = 0;
+      verts[nvert - 1].vertex = 0;
+      verts[nvert - 1].instantiated = 0;
       // OBJ vertex numbering starts at 1, but we shift them
       // all to start at 0 for indexing into vert[]
     }
@@ -795,23 +776,22 @@ Cell *objCloneCell(Cell *cell)
 
     Face *face;
 
-    while ((face = iterator.next())!=0)
-    {
+    while ((face = iterator.next()) != 0) {
       nface++;
       Tface *f = new Tface;
       f->face = 0;
-      f->no   = nface;
+      f->no = nface;
       assert(f);
       faces.append(f);
       {
-	FaceEdgeIterator edges(face);
+        FaceEdgeIterator edges(face);
 
-	Edge *edge;
+        Edge *edge;
 
-	while ((edge = edges.next())!=0)
-	  f->vlist.append(&verts[edge->Org()->getID()-1]);
+        while ((edge = edges.next()) != 0)
+          f->vlist.append(&verts[edge->Org()->getID() - 1]);
       }
-      add_arcs(f->vlist, f);		// add the topological info in face f
+      add_arcs(f->vlist, f); // add the topological info in face f
     }
   }
 

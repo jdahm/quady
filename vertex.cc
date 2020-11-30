@@ -4,8 +4,8 @@
  * ========================================================================= */
 
 #include <cassert>
-#include <stdio.h>
 #include <cstdlib>
+#include <stdio.h>
 
 #include "cell.hh"
 #include "edge.hh"
@@ -17,41 +17,36 @@
 
 /* -- public class methods ------------------------------------------------- */
 
-Vertex *Vertex::make(Cell *cell)
-{
-  assert(cell!=0);
+Vertex *Vertex::make(Cell *cell) {
+  assert(cell != 0);
 
   return new Vertex(cell);
 }
 
-void Vertex::kill(Vertex *vertex)
-{
-  assert(vertex!=0);
+void Vertex::kill(Vertex *vertex) {
+  assert(vertex != 0);
 
   delete vertex;
 }
 
 /* -- public instance methods ---------------------------------------------- */
 
-void Vertex::setID(unsigned int id)
-{
-  assert(id>0);
+void Vertex::setID(unsigned int id) {
+  assert(id > 0);
 
   this->id = id;
 }
 
-void Vertex::addEdge(Edge *edge)
-{
-  assert(edge!=0);
+void Vertex::addEdge(Edge *edge) {
+  assert(edge != 0);
 
   // only keep track of one edge in the orbit--this one is as good as any
 
   this->edge = edge;
 }
 
-void Vertex::removeEdge(Edge *edge)
-{
-  assert(edge!=0);
+void Vertex::removeEdge(Edge *edge) {
+  assert(edge != 0);
 
   // replace the arbitrary edge with another edge in the orbit
   // use null if this is the only edge
@@ -59,27 +54,23 @@ void Vertex::removeEdge(Edge *edge)
 
   Edge *next = edge->Onext();
 
-  this->edge = next!=edge ? next : 0;
+  this->edge = next != edge ? next : 0;
 }
 
 /* -- protected instance methods ------------------------------------------- */
 
-Vertex::Vertex(Cell *cell)
-{
-  assert(cell!=0);
+Vertex::Vertex(Cell *cell) {
+  assert(cell != 0);
 
   this->pos[0] = 0.0;
   this->pos[1] = 0.0;
   this->pos[2] = 0.0;
-  this->cell   = cell;
-  this->id     = cell->makeVertexID();
-  this->data   = 0;
-  this->edge   = 0;
+  this->cell = cell;
+  this->id = cell->makeVertexID();
+  this->data = 0;
+  this->edge = 0;
 
   cell->addVertex(this);
 }
 
-Vertex::~Vertex()
-{
-  cell->removeVertex(this);
-}
+Vertex::~Vertex() { cell->removeVertex(this); }

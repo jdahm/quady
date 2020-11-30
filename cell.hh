@@ -31,13 +31,11 @@ class CellFaceIterator;
  *            distinct faces;
  *            all are positive
  */
-class Cell
-{
+class Cell {
 
   /* -- public class methods ----------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return a new, degenerate cell consisting of a single closed edge (loop),
    * a single vertex at the origin, and a pair of faces.
@@ -68,8 +66,7 @@ class Cell
    * Other means of modifying a cell can potentially produce bizarre results.
    */
 
-  public:
-
+public:
   /*
    * Return a new edge formed by splitting a given vertex between a given pair
    * of faces.
@@ -118,8 +115,7 @@ class Cell
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Return the number of vertices in this cell.
    * <- the number of vertices
@@ -180,8 +176,7 @@ class Cell
 
   /* -- protected instance methods ----------------------------------------- */
 
-  protected:
-
+protected:
   /*
    * Initialize this cell consisting of no vertices and no faces.
    */
@@ -194,8 +189,7 @@ class Cell
 
   /* -- private instance methods ------------------------------------------- */
 
-  private:
-
+private:
   /*
    * Return the edge with a given origin vertex in the face orbit of a given
    * edge.
@@ -240,8 +234,7 @@ class Cell
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The vertices in this cell.
    * Nonnull.
@@ -292,30 +285,17 @@ class Cell
 
   friend class CellVertexIterator;
   friend class CellFaceIterator;
-
 };
 
 /* -- inline instance methods ---------------------------------------------- */
 
-inline unsigned int Cell::countVertices()
-{
-  return vertexCount;
-}
+inline unsigned int Cell::countVertices() { return vertexCount; }
 
-inline unsigned int Cell::makeVertexID()
-{
-  return vertexID++;
-}
+inline unsigned int Cell::makeVertexID() { return vertexID++; }
 
-inline unsigned int Cell::countFaces()
-{
-  return faceCount;
-}
+inline unsigned int Cell::countFaces() { return faceCount; }
 
-inline unsigned int Cell::makeFaceID()
-{
-  return faceID++;
-}
+inline unsigned int Cell::makeFaceID() { return faceID++; }
 
 /* ----------------------------------------------------------------------------
  * CellVertexIterator
@@ -324,42 +304,36 @@ inline unsigned int Cell::makeFaceID()
 /*
  * Enumerates the vertices of a given cell in arbitrary order.
  */
-class CellVertexIterator
-{
+class CellVertexIterator {
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Initialize this vertex iterator over a given cell.
    * cell -> the cell to iterate the vertices of;
    *         must be nonnull
    */
-  CellVertexIterator(Cell *cell)
-  {
-    this->cell  = cell;
+  CellVertexIterator(Cell *cell) {
+    this->cell = cell;
     this->count = cell->vertexCount;
   }
 
   /*
    * Release the storage occupied by this vertex iterator.
    */
-  ~CellVertexIterator()
-  {
-  }
+  ~CellVertexIterator() {}
 
   /*
    * Return the next vertex of this vertex iterator, if any.
    * <- the next vertex of this vertex iterator;
    *    null if none
    */
-  Vertex *next()
-  {
+  Vertex *next() {
     // iterate the array in reverse order so that the current vertex can be
     // removed during iteration
 
-    if (count<1)
+    if (count < 1)
       return 0;
 
     return cell->vertices[--count];
@@ -367,8 +341,7 @@ class CellVertexIterator
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The cell whose vertices are being iterated.
    * Nonnull.
@@ -379,7 +352,6 @@ class CellVertexIterator
    * The number of vertices left to iterate.
    */
   unsigned int count;
-
 };
 
 /* ----------------------------------------------------------------------------
@@ -389,42 +361,36 @@ class CellVertexIterator
 /*
  * Enumerates the faces of a given cell in arbitrary order.
  */
-class CellFaceIterator
-{
+class CellFaceIterator {
 
   /* -- public instance methods -------------------------------------------- */
 
-  public:
-
+public:
   /*
    * Initialize this face iterator over a given cell.
    * cell -> the cell to iterate the faces of;
    *         must be nonnull
    */
-  CellFaceIterator(Cell *cell)
-  {
-    this->cell  = cell;
+  CellFaceIterator(Cell *cell) {
+    this->cell = cell;
     this->count = cell->faceCount;
   }
 
   /*
    * Release the storage occupied by this face iterator.
    */
-  ~CellFaceIterator()
-  {
-  }
+  ~CellFaceIterator() {}
 
   /*
    * Return the next face of this face iterator, if any.
    * <- the next face of this face iterator;
    *    null if none
    */
-  Face *next()
-  {
+  Face *next() {
     // iterate the array in reverse order so that the current face can be
     // removed during iteration
 
-    if (count<1)
+    if (count < 1)
       return 0;
 
     return cell->faces[--count];
@@ -432,8 +398,7 @@ class CellFaceIterator
 
   /* -- private instance variables ----------------------------------------- */
 
-  private:
-
+private:
   /*
    * The cell whose faces are being iterated.
    * Nonnull.
@@ -444,7 +409,6 @@ class CellFaceIterator
    * The number of faces left to iterate.
    */
   unsigned int count;
-
 };
 
 #endif /* #ifndef cellINCLUDED */

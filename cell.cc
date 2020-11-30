@@ -4,8 +4,8 @@
  * ========================================================================= */
 
 #include <cassert>
-#include <stdio.h>
 #include <cstdlib>
+#include <stdio.h>
 
 #include "cell.hh"
 #include "face.hh"
@@ -17,8 +17,7 @@
 
 /* -- public class methods ------------------------------------------------- */
 
-Cell *Cell::make()
-{
+Cell *Cell::make() {
   // create a looping edge that connects to itself at a single vertex
   // the edge delimits two faces
   // this is the smallest cell that is consistent with our invariants
@@ -26,9 +25,9 @@ Cell *Cell::make()
   Cell *cell = new Cell();
 
   Vertex *vertex = Vertex::make(cell);
-  Face   *left   = Face::make(cell);
-  Face   *right  = Face::make(cell);
-  Edge   *edge   = Edge::make()->InvRot();
+  Face *left = Face::make(cell);
+  Face *right = Face::make(cell);
+  Edge *edge = Edge::make()->InvRot();
 
   edge->setOrg(vertex);
   edge->setDest(vertex);
@@ -38,8 +37,7 @@ Cell *Cell::make()
   return cell;
 }
 
-Cell *Cell::makeTetrahedron()
-{
+Cell *Cell::makeTetrahedron() {
   // use the Euler operators to construct a tetrahedron
 
   Cell *cell = make();
@@ -53,13 +51,13 @@ Cell *Cell::makeTetrahedron()
 
     vertex1 = iterator.next();
 
-    assert(vertex1!=0);
+    assert(vertex1 != 0);
   }
 
   // grab the initial edge and the initial faces
 
   Edge *edge1 = vertex1->getEdge();
-  Face *left  = edge1->Left();
+  Face *left = edge1->Left();
   Face *right = edge1->Right();
 
   // drop in four vertices along the initial edge
@@ -70,45 +68,45 @@ Cell *Cell::makeTetrahedron()
 
   // cut each of the faces in half from complementary vertices
 
-  Face *front  = cell->makeFaceEdge(left, vertex2, vertex4)->Right();
+  Face *front = cell->makeFaceEdge(left, vertex2, vertex4)->Right();
   Face *bottom = cell->makeFaceEdge(right, vertex1, vertex3)->Right();
 
   return cell;
 }
 
-void Cell::kill(Cell *cell)
-{
-  assert(cell!=0);
+void Cell::kill(Cell *cell) {
+  assert(cell != 0);
 
   delete cell;
 }
 
 /* -- public instance methods (Euler operators) ---------------------------- */
 
-Edge *Cell::makeVertexEdge(Vertex *vertex, Face *left, Face *right)
-{
-  assert(vertex!=0);
-  assert(left!=0);
-  assert(right!=0);
+Edge *Cell::makeVertexEdge(Vertex *vertex, Face *left, Face *right) {
+  assert(vertex != 0);
+  assert(left != 0);
+  assert(right != 0);
 
   // locate the edges to the right of each of the faces in the orbit of the
   // vertex
 
-  Edge *edge  = vertex->getEdge();
+  Edge *edge = vertex->getEdge();
   Edge *edge1 = getOrbitLeft(edge, right);
   Edge *edge2 = getOrbitLeft(edge, left);
 
-  if (edge1==0)
-  {
-    (void)fprintf(stderr, "Cell::makeVertexEdge: unable to locate right face %u on vertex %u\n",
-		 right->getID(), vertex->getID());
+  if (edge1 == 0) {
+    (void)fprintf(
+        stderr,
+        "Cell::makeVertexEdge: unable to locate right face %u on vertex %u\n",
+        right->getID(), vertex->getID());
     abort();
   }
 
-  if (edge2==0)
-  {
-    (void)fprintf(stderr, "Cell::makeVertexEdge: unable to locate left face %u on vertex %u\n",
-		 left->getID(), vertex->getID());
+  if (edge2 == 0) {
+    (void)fprintf(
+        stderr,
+        "Cell::makeVertexEdge: unable to locate left face %u on vertex %u\n",
+        left->getID(), vertex->getID());
     abort();
   }
 
@@ -148,9 +146,8 @@ Edge *Cell::makeVertexEdge(Vertex *vertex, Face *left, Face *right)
   return edgeNew;
 }
 
-void Cell::killVertexEdge(Edge *edge)
-{
-  assert(edge!=0);
+void Cell::killVertexEdge(Edge *edge) {
+  assert(edge != 0);
 
   // locate _edge1_ and _edge2_ as in _makeVertexEdge_
 
@@ -159,7 +156,7 @@ void Cell::killVertexEdge(Edge *edge)
 
   // use _edge1_ for _edge2_ if the destination vertex is isolated
 
-  if (edge2==edge->Sym())
+  if (edge2 == edge->Sym())
     edge2 = edge1;
 
   // inverse of _makeVertexEdge_
@@ -184,29 +181,30 @@ void Cell::killVertexEdge(Edge *edge)
   Edge::kill(edge);
 }
 
-Edge *Cell::makeFaceEdge(Face *face, Vertex *org, Vertex *dest)
-{
-  assert(face!=0);
-  assert(org!=0);
-  assert(dest!=0);
+Edge *Cell::makeFaceEdge(Face *face, Vertex *org, Vertex *dest) {
+  assert(face != 0);
+  assert(org != 0);
+  assert(dest != 0);
 
   // locate the edges leaving each of the vertices in the orbit of the face
 
-  Edge *edge  = face->getEdge();
+  Edge *edge = face->getEdge();
   Edge *edge1 = getOrbitOrg(edge, org);
   Edge *edge2 = getOrbitOrg(edge, dest);
 
-  if (edge1==0)
-  {
-    (void)fprintf(stderr, "Cell::makeFaceEdge: unable to locate origin vertex %u on face %u\n",
-		 org->getID(), face->getID());
+  if (edge1 == 0) {
+    (void)fprintf(
+        stderr,
+        "Cell::makeFaceEdge: unable to locate origin vertex %u on face %u\n",
+        org->getID(), face->getID());
     abort();
   }
 
-  if (edge2==0)
-  {
-    (void)fprintf(stderr, "Cell::makeFaceEdge: unable to locate destination vertex %u on face %u\n",
-		 dest->getID(), face->getID());
+  if (edge2 == 0) {
+    (void)fprintf(stderr,
+                  "Cell::makeFaceEdge: unable to locate destination vertex %u "
+                  "on face %u\n",
+                  dest->getID(), face->getID());
     abort();
   }
 
@@ -243,9 +241,8 @@ Edge *Cell::makeFaceEdge(Face *face, Vertex *org, Vertex *dest)
   return edgeNew;
 }
 
-void Cell::killFaceEdge(Edge *edge)
-{
-  assert(edge!=0);
+void Cell::killFaceEdge(Edge *edge) {
+  assert(edge != 0);
 
   // locate _edge1_ and _edge2_ as in _makeFaceEdge_
 
@@ -254,7 +251,7 @@ void Cell::killFaceEdge(Edge *edge)
 
   // use _edge2_ for _edge1_ if the right face is inside a loop
 
-  if (edge1==edge->Sym())
+  if (edge1 == edge->Sym())
     edge1 = edge2;
 
   // inverse of _makeFaceEdge_
@@ -281,23 +278,21 @@ void Cell::killFaceEdge(Edge *edge)
 
 /* -- public instance methods ---------------------------------------------- */
 
-void Cell::addVertex(Vertex *vertex)
-{
-  assert(vertex!=0);
+void Cell::addVertex(Vertex *vertex) {
+  assert(vertex != 0);
 
   // expand the vertex array, if necessary
 
-  if (vertexCount>=vertexSize)
-  {
-    unsigned int vertexSizeNew = vertexSize*2;
-    Vertex     **verticesNew   = new Vertex*[vertexSizeNew];
+  if (vertexCount >= vertexSize) {
+    unsigned int vertexSizeNew = vertexSize * 2;
+    Vertex **verticesNew = new Vertex *[vertexSizeNew];
 
-    for (unsigned int i = 0; i<vertexCount; i++)
+    for (unsigned int i = 0; i < vertexCount; i++)
       verticesNew[i] = vertices[i];
 
     delete[] vertices;
 
-    vertices   = verticesNew;
+    vertices = verticesNew;
     vertexSize = vertexSizeNew;
   }
 
@@ -306,41 +301,37 @@ void Cell::addVertex(Vertex *vertex)
   vertices[vertexCount++] = vertex;
 }
 
-void Cell::removeVertex(Vertex *vertex)
-{
-  assert(vertex!=0);
+void Cell::removeVertex(Vertex *vertex) {
+  assert(vertex != 0);
 
   // locate the vertex in the array and replace it with the current last vertex
   // if already the last vertex, just overwrite it
   // slow: should make this a doubly-linked list ???
 
-  for (unsigned int i = vertexCount; i>0; i--)
-    if (vertices[i-1]==vertex)
-    {
-      vertices[i-1] = vertices[--vertexCount];
+  for (unsigned int i = vertexCount; i > 0; i--)
+    if (vertices[i - 1] == vertex) {
+      vertices[i - 1] = vertices[--vertexCount];
       return;
     }
 
   assert(0);
 }
 
-void Cell::addFace(Face *face)
-{
-  assert(face!=0);
+void Cell::addFace(Face *face) {
+  assert(face != 0);
 
   // expand the face array, if necessary
 
-  if (faceCount>=faceSize)
-  {
-    unsigned int faceSizeNew = faceSize*2;
-    Face       **facesNew    = new Face*[faceSizeNew];
+  if (faceCount >= faceSize) {
+    unsigned int faceSizeNew = faceSize * 2;
+    Face **facesNew = new Face *[faceSizeNew];
 
-    for (unsigned int i = 0; i<faceCount; i++)
+    for (unsigned int i = 0; i < faceCount; i++)
       facesNew[i] = faces[i];
 
     delete[] faces;
 
-    faces    = facesNew;
+    faces = facesNew;
     faceSize = faceSizeNew;
   }
 
@@ -349,18 +340,16 @@ void Cell::addFace(Face *face)
   faces[faceCount++] = face;
 }
 
-void Cell::removeFace(Face *face)
-{
-  assert(face!=0);
+void Cell::removeFace(Face *face) {
+  assert(face != 0);
 
   // locate the face in the array and replace it with the current last face
   // if already the last face, just overwrite it
   // slow: should make this a doubly-linked list ???
 
-  for (unsigned int i = faceCount; i>0; i--)
-    if (faces[i-1]==face)
-    {
-      faces[i-1] = faces[--faceCount];
+  for (unsigned int i = faceCount; i > 0; i--)
+    if (faces[i - 1] == face) {
+      faces[i - 1] = faces[--faceCount];
       return;
     }
 
@@ -369,35 +358,33 @@ void Cell::removeFace(Face *face)
 
 /* -- protected instance methods ------------------------------------------- */
 
-Cell::Cell()
-{
+Cell::Cell() {
   // preallocate enough elements for a cube
 
-  vertices    = new Vertex*[8];
+  vertices = new Vertex *[8];
   vertexCount = 0;
-  vertexSize  = 8;
-  vertexID    = 1;
+  vertexSize = 8;
+  vertexID = 1;
 
-  faces     = new Face*[6];
+  faces = new Face *[6];
   faceCount = 0;
-  faceSize  = 6;
-  faceID    = 1;
+  faceSize = 6;
+  faceID = 1;
 }
 
-Cell::~Cell()
-{
+Cell::~Cell() {
   // reclaim each of the vertices and faces still owned by the cell
   // go in backwards order so that when the elements try to remove themselves,
   // it will be linear time
 
   {
-    for (unsigned int i = vertexCount; i>0; i--)
-      Vertex::kill(vertices[i-1]);
+    for (unsigned int i = vertexCount; i > 0; i--)
+      Vertex::kill(vertices[i - 1]);
   }
 
   {
-    for (unsigned int i = faceCount; i>0; i--)
-      Face::kill(faces[i-1]);
+    for (unsigned int i = faceCount; i > 0; i--)
+      Face::kill(faces[i - 1]);
   }
 
   // reclaim the vertex and face arrays
@@ -408,84 +395,72 @@ Cell::~Cell()
 
 /* -- private instance methods --------------------------------------------- */
 
-Edge *Cell::getOrbitOrg(Edge *edge, Vertex *org)
-{
-  assert(edge!=0);
-  assert(org!=0);
+Edge *Cell::getOrbitOrg(Edge *edge, Vertex *org) {
+  assert(edge != 0);
+  assert(org != 0);
 
   // traverse the Lnext orbit of _edge_ looking for an edge whose origin is
   // _org_
 
   Edge *scan = edge;
 
-  do
-  {
-    if (scan->Org()==org)
+  do {
+    if (scan->Org() == org)
       return scan;
 
     scan = scan->Lnext();
-  }
-  while (scan!=edge);
+  } while (scan != edge);
 
   return 0;
 }
 
-void Cell::setOrbitOrg(Edge *edge, Vertex *org)
-{
-  assert(edge!=0);
-  assert(org!=0);
+void Cell::setOrbitOrg(Edge *edge, Vertex *org) {
+  assert(edge != 0);
+  assert(org != 0);
 
   // traverse the Onext orbit of _edge_, setting the origin of each edge to
   // _org_
 
   Edge *scan = edge;
 
-  do
-  {
+  do {
     scan->setOrg(org);
 
     scan = scan->Onext();
-  }
-  while (scan!=edge);
+  } while (scan != edge);
 }
 
-Edge *Cell::getOrbitLeft(Edge *edge, Face *left)
-{
-  assert(edge!=0);
-  assert(left!=0);
+Edge *Cell::getOrbitLeft(Edge *edge, Face *left) {
+  assert(edge != 0);
+  assert(left != 0);
 
   // traverse the Onext orbit of _edge_ looking for an edge whose left face is
   // _left
 
   Edge *scan = edge;
 
-  do
-  {
-    if (scan->Left()==left)
+  do {
+    if (scan->Left() == left)
       return scan;
 
     scan = scan->Onext();
-  }
-  while (scan!=edge);
+  } while (scan != edge);
 
   return 0;
 }
 
-void Cell::setOrbitLeft(Edge *edge, Face *left)
-{
-  assert(edge!=0);
-  assert(left!=0);
+void Cell::setOrbitLeft(Edge *edge, Face *left) {
+  assert(edge != 0);
+  assert(left != 0);
 
   // traverse the Lnext orbit of _edge_, setting the left face of each edge to
   // _left_
 
   Edge *scan = edge;
 
-  do
-  {
+  do {
     scan->setLeft(left);
 
     scan = scan->Lnext();
-  }
-  while (scan!=edge);
+  } while (scan != edge);
 }
