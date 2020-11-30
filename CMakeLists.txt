@@ -20,6 +20,7 @@ add_library(quad_edge SHARED
 
 set_target_properties(quad_edge PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(quad_edge PROPERTIES SOVERSION 1)
+set_property(TARGET quad_edge PROPERTY CXX_STANDARD 11)
 
 add_executable(test test.cc)
 target_link_libraries(test quad_edge)
