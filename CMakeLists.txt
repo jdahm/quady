@@ -4,8 +4,9 @@ project(quad_edge VERSION 0.1.0 DESCRIPTION "Quad-Edge Implementation in C++")
 # Prepare "Catch" library for other executables
 set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/catch)
 add_library(Catch2::Catch IMPORTED INTERFACE)
-set_property(Catch2::Catch PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CATCH_INCLUDE_DIR}")
-
+set_property(TARGET Catch2::Catch PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CATCH_INCLUDE_DIR}")
+# set_property(TARGET Catch2::Catch PROPERTY CXX_STANDARD 14)
+target_compile_features(Catch2::Catch INTERFACE cxx_std_17)
 
 add_library(quad_edge SHARED
     array.cc
@@ -26,7 +27,11 @@ add_library(quad_edge SHARED
 
 set_target_properties(quad_edge PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(quad_edge PROPERTIES SOVERSION 1)
-set_property(TARGET quad_edge PROPERTY CXX_STANDARD 11)
+target_compile_features(quad_edge INTERFACE cxx_std_17)
 
-add_executable(test test.cc)
-target_link_libraries(test quad_edge)
+add_executable(tests tests.cc)
+target_link_libraries(tests quad_edge Catch2::Catch)
+
+include(CTest)
+enable_testing()
+add_test(NAME tests COMMAND tests)

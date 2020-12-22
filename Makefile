@@ -1,7 +1,16 @@
 all: configure build
 
 BUILD_DIR=build
-CONFIGURE_OPTS=-DCATCH_INSTALL_EXTRAS=OFF -DCATCH_INSTALL_DOCS=OFF -DCATCH_BUILD_TESTING=OFF
+BUILD_GENERATOR=Ninja
+CONFIGURE_OPTS=-G$(BUILD_GENERATOR)
+
+.PHONY: realclean
+realclean:
+	rm -rf $(BUILD_DIR)
+
+.PHONY: clean
+clean:
+	rm -rf $(BUILD_DIR)
 
 .PHONY: configure
 configure:
@@ -10,3 +19,12 @@ configure:
 .PHONY: build
 build:
 	cmake --build $(BUILD_DIR) -j$(nproc)
+
+
+.PHONY: build-and-test
+build-and-test:
+	ctest --build-and-test . $(BUILD_DIR) --build-generator $(BUILD_GENERATOR)
+
+.PHONY: test
+test:
+	(cd $(BUILD_DIR) && ctest)
