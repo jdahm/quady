@@ -1,10 +1,4 @@
-
-/* ============================================================================
- * p2/cell/obj.hh
- * ========================================================================= */
-
-#ifndef objINCLUDED
-#define objINCLUDED
+#pragma once
 
 #include "cell.hh"
 
@@ -28,5 +22,3 @@ void objWriteCell(Cell *cell, const char *name);
  * <- a cell identical to _cell_
  */
 Cell *objCloneCell(Cell *cell);
-
-#endif /* #ifndef objINCLUDED */

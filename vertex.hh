@@ -1,10 +1,4 @@
-
-/* ============================================================================
- * p2/cell/vertex.hh
- * ========================================================================= */
-
-#ifndef vertexINCLUDED
-#define vertexINCLUDED
+#pragma once
 
 #include <array>
 
@@ -219,5 +213,3 @@ private:
    */
   Edge *edge;
 };
-
-#endif /* #ifndef vertexINCLUDED */

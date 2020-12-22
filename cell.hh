@@ -1,10 +1,4 @@
-
-/* ============================================================================
- * p2/cell/cell.hh
- * ========================================================================= */
-
-#ifndef cellINCLUDED
-#define cellINCLUDED
+#pragma once
 
 #include "edge.hh"
 #include "face.hh"
@@ -410,5 +404,3 @@ private:
    */
   unsigned int count;
 };
-
-#endif /* #ifndef cellINCLUDED */

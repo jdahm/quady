@@ -1,10 +1,5 @@
 
-/* ============================================================================
- * p2/cell/face.hh
- * ========================================================================= */
-
-#ifndef faceINCLUDED
-#define faceINCLUDED
+#pragma once
 
 #include "edge.hh"
 
@@ -211,5 +206,3 @@ private:
    */
   Edge *edge;
 };
-
-#endif /* #ifndef faceINCLUDED */

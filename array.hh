@@ -4,8 +4,7 @@
 
 // Paul Heckbert	10 Feb 1999
 
-#ifndef ARRAY_H
-#define ARRAY_H
+#pragma once
 
 #include <cassert>
 #include <iostream>
@@ -96,5 +95,3 @@ std::ostream &operator<<(std::ostream &s, const Array<Type> &a) { // print array
   s << "end" << std::endl;
   return s;
 }
-
-#endif

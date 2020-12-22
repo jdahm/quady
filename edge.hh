@@ -1,10 +1,4 @@
-
-/* ============================================================================
- * p2/cell/edge.hh
- * ========================================================================= */
-
-#ifndef edgeINCLUDED
-#define edgeINCLUDED
+#pragma once
 
 class Face;
 class QuadEdge;
@@ -316,5 +310,3 @@ inline Vertex *Edge::Dest() { return Sym()->vertex; }
 inline Face *Edge::Left() { return Rot()->face; }
 
 inline Face *Edge::Right() { return InvRot()->face; }
-
-#endif /* #ifndef edgeINCLUDED */

@@ -5,8 +5,7 @@
 //					this turned out to be awkward
 //			9 Feb 1999 - version 2: List_item now has "Type *obj"
 
-#ifndef LIST_H
-#define LIST_H
+#pragma once
 
 #include <cassert>
 #include <iostream>
@@ -249,5 +248,3 @@ template <class Type> void List<Type>::dup() { // duplicate top item
   assert(p);
   push(p);
 }
-
-#endif
