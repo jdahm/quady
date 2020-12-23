@@ -1,8 +1,3 @@
-
-/* ============================================================================
- * p2/cell/vertex.cc
- * ========================================================================= */
-
 #include <cassert>
 #include <cstdlib>
 #include <stdio.h>
@@ -10,6 +5,8 @@
 #include "cell.hh"
 #include "edge.hh"
 #include "vertex.hh"
+
+namespace quady {
 
 /* ----------------------------------------------------------------------------
  * Vertex
@@ -74,3 +71,5 @@ Vertex::Vertex(Cell *cell) {
 }
 
 Vertex::~Vertex() { cell->removeVertex(this); }
+
+}

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace quady {
+
 class Face;
 class QuadEdge;
 class Vertex;
@@ -310,3 +312,5 @@ inline Vertex *Edge::Dest() { return Sym()->vertex; }
 inline Face *Edge::Left() { return Rot()->face; }
 
 inline Face *Edge::Right() { return InvRot()->face; }
+
+}

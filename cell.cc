@@ -1,8 +1,3 @@
-
-/* ============================================================================
- * p2/cell/cell.cc
- * ========================================================================= */
-
 #include <cassert>
 #include <cstdlib>
 #include <stdio.h>
@@ -10,6 +5,8 @@
 #include "cell.hh"
 #include "face.hh"
 #include "vertex.hh"
+
+namespace quady {
 
 /* ----------------------------------------------------------------------------
  * Cell
@@ -463,4 +460,6 @@ void Cell::setOrbitLeft(Edge *edge, Face *left) {
 
     scan = scan->Lnext();
   } while (scan != edge);
+}
+
 }

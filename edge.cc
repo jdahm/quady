@@ -1,8 +1,3 @@
-
-/* ============================================================================
- * p2/cell/edge.cc
- * ========================================================================= */
-
 #include <cassert>
 #include <cstdlib>
 #include <stdio.h>
@@ -10,6 +5,8 @@
 #include "edge.hh"
 #include "face.hh"
 #include "vertex.hh"
+
+namespace quady {
 
 /* ----------------------------------------------------------------------------
  * QuadEdge
@@ -151,3 +148,5 @@ Edge::~Edge() {}
 /* -- private class variables ---------------------------------------------- */
 
 unsigned int Edge::nextID = 4;
+
+}

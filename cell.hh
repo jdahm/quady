@@ -4,6 +4,8 @@
 #include "face.hh"
 #include "vertex.hh"
 
+namespace quady {
+
 class CellVertexIterator;
 class CellFaceIterator;
 
@@ -404,3 +406,5 @@ private:
    */
   unsigned int count;
 };
+
+}

@@ -31,6 +31,10 @@ target_compile_features(quad_edge INTERFACE cxx_std_17)
 add_executable(tests tests.cc)
 target_link_libraries(tests quad_edge Catch2::Catch)
 
+add_executable(test-obj test-obj.cc)
+target_link_libraries(test-obj quad_edge Catch2::Catch)
+
 include(CTest)
 enable_testing()
 add_test(NAME tests COMMAND tests)
+add_test(NAME test-obj COMMAND test-obj)

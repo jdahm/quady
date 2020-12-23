@@ -1,8 +1,4 @@
 
-/* ============================================================================
- * p2/cell/face.cc
- * ========================================================================= */
-
 #include <cassert>
 #include <cstdlib>
 #include <stdio.h>
@@ -10,6 +6,8 @@
 #include "cell.hh"
 #include "edge.hh"
 #include "face.hh"
+
+namespace quady {
 
 /* ----------------------------------------------------------------------------
  * Face
@@ -71,3 +69,5 @@ Face::Face(Cell *cell) {
 }
 
 Face::~Face() { cell->removeFace(this); }
+
+}

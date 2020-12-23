@@ -3,6 +3,8 @@
 
 #include "edge.hh"
 
+using quady::Edge;
+
 TEST_CASE("Edge properties", "[edge]") {
     Edge* edge = Edge::make();
 

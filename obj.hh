@@ -2,6 +2,8 @@
 
 #include "cell.hh"
 
+namespace quady {
+
 /*
  * Return a cell for a given object file.
  * name -> the name of the object file to read the cell from
@@ -22,3 +24,5 @@ void objWriteCell(Cell *cell, const char *name);
  * <- a cell identical to _cell_
  */
 Cell *objCloneCell(Cell *cell);
+
+}

@@ -25,6 +25,8 @@
 #include "cell.hh"
 #include "list.hh"
 
+namespace quady {
+
 // ---------------------------- some data structures used by objReadCell only
 
 struct Tvert;
@@ -669,7 +671,7 @@ void main(int argc, char **argv) {
 
 #endif
 
-static void objWriteCell(Cell *cell, std::ostream &s, const char *streamname) {
+static void objWriteCell(Cell *cell, std::ostream &s) {
   // renumber vertices in current order
   // yuk: should really leave ids intact ???
 
@@ -727,7 +729,8 @@ void objWriteCell(Cell *cell, const char *file) {
     std::cerr << "objWriteCell: can't write " << file << std::endl;
     return;
   }
-  objWriteCell(cell, s, file);
+  objWriteCell(cell, s);
+  s.close();
 }
 
 Cell *objCloneCell(Cell *cell) {
@@ -798,4 +801,6 @@ Cell *objCloneCell(Cell *cell) {
   // go to town
 
   return build_quadedge(verts, faces);
+}
+
 }

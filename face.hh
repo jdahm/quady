@@ -1,7 +1,8 @@
-
 #pragma once
 
 #include "edge.hh"
+
+namespace quady {
 
 class Cell;
 
@@ -206,3 +207,5 @@ private:
    */
   Edge *edge;
 };
+
+}
