@@ -1,4 +1,0 @@
-
-Edge make_edge() {
-
-}
